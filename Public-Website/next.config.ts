@@ -11,8 +11,12 @@ const nextConfig: NextConfig = {
     // animates via <ViewTransition> in the root layout.
     viewTransition: true,
   },
-  // This app owns its dependencies and deploys independently of the sibling app.
-  outputFileTracingRoot: dirname(fileURLToPath(import.meta.url)),
+  // Locally this app owns its dependencies, so tracing stops at this folder.
+  // Not on Vercel: it sets the root to the repo itself, and an app-level root
+  // there makes it look for the build output at <repo>/.next (ENOENT).
+  ...(process.env.VERCEL
+    ? {}
+    : { outputFileTracingRoot: dirname(fileURLToPath(import.meta.url)) }),
   /*
    * Two pre-redesign pages have no counterpart in the finalized design; their
    * content now lives on pages that do, so old links and bookmarks follow it.
