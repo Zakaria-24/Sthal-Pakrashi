@@ -3,7 +3,10 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { ShieldCheck } from "lucide-react";
+
 import { api } from "@/lib/client-api";
+import { BrandMark } from "@/components/sidebar-nav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,11 +21,10 @@ import {
 /**
  * A single login page with two routes through it:
  *
- *   password  — staff sign in with the password the super admin gave them.
+ *   password  — everyone can sign in with a password (staff get theirs from
+ *               the super admin; the super admin sets theirs in the terminal).
  *   otpEmail  — "Sign in with OTP" opens its own email step…
- *   otpCode   — …which sends a code, then asks for it.
- *
- * The super admin has no password and always takes the second path.
+ *   otpCode   — …which sends a code, then asks for it (super admin only).
  */
 type Step = "password" | "otpEmail" | "otpCode";
 
@@ -106,9 +108,9 @@ function LoginCard() {
   );
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>
+    <Card className="w-full max-w-md rounded-2xl border shadow-lift">
+      <CardHeader className="space-y-1">
+        <CardTitle className="font-heading text-h2">
           {step === "password" ? "Sign in" : "Sign in with OTP"}
         </CardTitle>
         <CardDescription>
@@ -250,10 +252,50 @@ function LoginCard() {
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <Suspense>
-        <LoginCard />
-      </Suspense>
+    <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+      {/* Brand panel — the public site's green block with its gold accents. */}
+      <section className="relative isolate hidden overflow-hidden bg-brand-hover px-12 py-12 text-brand-foreground lg:flex lg:flex-col lg:justify-between">
+        <span aria-hidden className="absolute -top-24 -right-20 -z-10 size-80 rounded-full bg-gold opacity-15" />
+        <span aria-hidden className="absolute -bottom-28 -left-16 -z-10 size-96 rounded-full bg-white opacity-5" />
+        <div className="flex items-center gap-3">
+          <BrandMark className="size-11" />
+          <span className="text-eyebrow tracking-eyebrow text-on-brand-muted uppercase">
+            School CMS
+          </span>
+        </div>
+        <div className="max-w-md">
+          <p className="inline-flex items-center gap-2 text-eyebrow tracking-eyebrow text-gold uppercase">
+            <span aria-hidden className="size-1.5 rounded-full bg-gold" />
+            Content dashboard
+          </p>
+          <h1 className="mt-3 font-heading text-display">
+            Manage everything the school website shows.
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-on-brand-muted">
+            Notices, events, galleries, teachers and admission information — all
+            in one place, published the moment you save.
+          </p>
+        </div>
+        <p className="flex items-center gap-2 text-xs text-on-brand-muted">
+          <ShieldCheck className="size-4 text-gold" />
+          Authorised staff only. Sessions are signed and expire automatically.
+        </p>
+      </section>
+
+      <div className="flex flex-col items-center justify-center gap-6 px-4 py-10 sm:px-6">
+        <div className="flex items-center gap-3 lg:hidden">
+          <span className="flex size-12 items-center justify-center rounded-xl bg-brand-hover">
+            <BrandMark className="size-8" />
+          </span>
+          <span className="flex flex-col leading-tight">
+            <span className="font-heading text-base font-bold text-foreground">School CMS</span>
+            <span className="text-xs text-muted-foreground">Content dashboard</span>
+          </span>
+        </div>
+        <Suspense>
+          <LoginCard />
+        </Suspense>
+      </div>
     </main>
   );
 }

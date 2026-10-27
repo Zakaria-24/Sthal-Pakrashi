@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PageHeader, PageShell } from "@/components/page-header";
 
 /**
  * Admission management: the open/closed switch (stored on the site settings)
@@ -123,30 +124,28 @@ export default function AdmissionPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4 p-6">
+      <PageShell>
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64 w-full" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-h1 text-foreground">Admission info</h1>
-          <p className="text-muted-foreground text-sm">
-            What applicants see on the Admission Info page, and whether they can
-            apply online.
-          </p>
-        </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Saving…" : "Save changes"}
-        </Button>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Admission"
+        title="Admission info"
+        description="What applicants see on the Admission Info page, and whether they can apply online."
+        actions={
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        }
+      />
 
       {error && (
-        <div className="border-destructive/40 bg-destructive/5 rounded-md border p-4">
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
           <p className="text-destructive text-sm">{error}</p>
         </div>
       )}
@@ -241,7 +240,7 @@ export default function AdmissionPage() {
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

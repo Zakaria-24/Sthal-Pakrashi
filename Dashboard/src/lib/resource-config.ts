@@ -47,11 +47,7 @@ export type ResourceConfig = {
   updateSchema: z.ZodTypeAny;
   defaultSort: Record<string, 1 | -1>;
   searchFields: readonly string[];
-  /**
-   * Mongo filter a visitor without a session is always limited to, whatever
-   * they put in the query string. Defaults to `{ isActive: true }`; content
-   * with a draft/published workflow overrides it.
-   */
+  /** Public requests use this filter before applying visitor query parameters. */
   publicFilter?: Record<string, unknown>;
 };
 
@@ -124,16 +120,10 @@ const SHIFTS = ["morning", "day", "evening", "none"] as const;
 const DOCUMENT_SHIFTS = ["none", "morning", "day", "evening"] as const;
 const CLASS_GROUPS = ["none", "science", "humanities", "business"] as const;
 const STAFF_TYPES = ["administrative", "support"] as const;
-const POST_CATEGORIES = [
-  "academic",
-  "campus-life",
-  "events",
-  "achievements",
-  "student-activities",
-] as const;
+const VERSIONS = ["bangla", "english", "both"] as const;
+const POST_CATEGORIES = ["academic", "campus-life", "events", "achievements", "student-activities"] as const;
 const POST_STATUSES = ["draft", "published"] as const;
 const PROGRAM_LEVELS = ["secondary", "higher-secondary"] as const;
-const VERSIONS = ["bangla", "english", "both"] as const;
 const LEADERSHIP_ROLES = [
   "chairman",
   "head-teacher",
@@ -164,6 +154,7 @@ const bannerCreate = z.object({
   ctaLabel: text(),
   ctaLink: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -176,6 +167,7 @@ const noticeCreate = z.object({
   expiresAt: optionalDate(),
   isPinned: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
 });
 
 const eventCreate = z.object({
@@ -188,6 +180,7 @@ const eventCreate = z.object({
   imageUrl: text(),
   isFeatured: z.boolean().default(false),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
 });
 
 const galleryCreate = z.object({
@@ -197,6 +190,7 @@ const galleryCreate = z.object({
   category: z.enum(GALLERY_CATEGORIES).default("other"),
   tags: z.array(z.string()).default([]),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -207,6 +201,7 @@ const alumniCreate = z.object({
   occupation: text(),
   testimonial: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -217,6 +212,7 @@ const founderCreate = z.object({
   education: text(),
   message: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -227,6 +223,7 @@ const committeeCreate = z.object({
   education: text(),
   contactNumber: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -237,6 +234,7 @@ const leadershipMessageCreate = z.object({
   photoUrl: text(),
   message: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -248,6 +246,7 @@ const videoCreate = z.object({
   category: z.enum(VIDEO_CATEGORIES).default("other"),
   publishedAt: dateDefaultingToNow(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -257,6 +256,7 @@ const usefulLinkCreate = z.object({
   description: text(),
   category: z.enum(LINK_CATEGORIES).default("government"),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -267,6 +267,7 @@ const uniformCreate = z.object({
   description: text(),
   imageUrl: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -280,6 +281,7 @@ const recognitionCreate = z.object({
   expiryDate: optionalDate(),
   documentUrl: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -292,6 +294,7 @@ const classInfoCreate = z.object({
   boys: z.coerce.number().default(0),
   girls: z.coerce.number().default(0),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -304,6 +307,7 @@ const academicDocumentCreate = z.object({
   fileUrl: text(),
   publishedAt: dateDefaultingToNow(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -316,6 +320,7 @@ const staffCreate = z.object({
   phone: text(),
   joiningDate: optionalDate(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -329,19 +334,14 @@ const teacherCreate = z.object({
   phone: text(),
   joiningDate: optionalDate(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
-const slug = () =>
-  z.preprocess(
-    (value) => (value === "" || value === null ? undefined : value),
-    z
-      .string()
-      .trim()
-      .toLowerCase()
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers and hyphens")
-      .optional(),
-  );
+const slug = () => z.preprocess(
+  (value) => (value === "" || value === null ? undefined : value),
+  z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers and hyphens").optional(),
+);
 
 const postCreate = z.object({
   title: requiredText("Title"),
@@ -352,6 +352,7 @@ const postCreate = z.object({
   category: z.enum(POST_CATEGORIES).default("academic"),
   author: text(),
   status: z.enum(POST_STATUSES).default("draft"),
+  isDemo: z.boolean().default(false),
   publishedAt: dateDefaultingToNow(),
 });
 
@@ -360,6 +361,7 @@ const programCreate = z.object({
   level: z.enum(PROGRAM_LEVELS).default("secondary"),
   description: text(),
   isActive: z.boolean().default(true),
+  isDemo: z.boolean().default(false),
   order: z.coerce.number().default(0),
 });
 
@@ -384,6 +386,7 @@ export const RESOURCES = {
       { name: "ctaLink", label: "Button link", type: "text", hideInTable: true },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -422,6 +425,7 @@ export const RESOURCES = {
       { name: "expiresAt", label: "Expires", type: "date", hideInTable: true },
       { name: "isPinned", label: "Pinned", type: "boolean" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -455,6 +459,7 @@ export const RESOURCES = {
       { name: "imageUrl", label: "Image", type: "image", hideInTable: true },
       { name: "isFeatured", label: "Featured", type: "boolean" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -471,13 +476,7 @@ export const RESOURCES = {
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
       { name: "imageUrl", label: "Image", type: "image", required: true },
-      {
-        name: "caption",
-        label: "Caption",
-        type: "text",
-        hideInTable: true,
-        helpText: "Optional — shown with the photo when set.",
-      },
+      { name: "caption", label: "Caption", type: "text", hideInTable: true },
       {
         name: "category",
         label: "Category",
@@ -487,6 +486,7 @@ export const RESOURCES = {
       { name: "tags", label: "Tags", type: "tags", hideInTable: true },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -531,6 +531,7 @@ export const RESOURCES = {
       { name: "publishedAt", label: "Published", type: "date" },
       { name: "order", label: "Order", type: "number", hideInTable: true },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -569,6 +570,7 @@ export const RESOURCES = {
       { name: "imageUrl", label: "Photo", type: "image" },
       { name: "order", label: "Order", type: "number", hideInTable: true },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -605,6 +607,7 @@ export const RESOURCES = {
       },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -637,6 +640,7 @@ export const RESOURCES = {
       },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -683,6 +687,7 @@ export const RESOURCES = {
       },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -706,17 +711,12 @@ export const RESOURCES = {
       },
       { name: "shift", label: "Shift", type: "select", options: SHIFTS },
       { name: "version", label: "Version", type: "select", options: VERSIONS },
-      {
-        name: "group",
-        label: "Group",
-        type: "select",
-        options: CLASS_GROUPS,
-        helpText: "Only for classes split into groups; otherwise leave as none.",
-      },
+      { name: "group", label: "Group", type: "select", options: CLASS_GROUPS },
       { name: "boys", label: "Boys", type: "number" },
       { name: "girls", label: "Girls", type: "number" },
       { name: "order", label: "Order", type: "number", hideInTable: true },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -746,14 +746,6 @@ export const RESOURCES = {
       },
       { name: "academicYear", label: "Year", type: "text" },
       {
-        name: "shift",
-        label: "Shift",
-        type: "select",
-        options: DOCUMENT_SHIFTS,
-        hideInTable: true,
-        helpText: "Leave as none when the document applies to every shift.",
-      },
-      {
         name: "fileUrl",
         label: "File",
         type: "image",
@@ -763,6 +755,7 @@ export const RESOURCES = {
       { name: "publishedAt", label: "Published", type: "date" },
       { name: "order", label: "Order", type: "number", hideInTable: true },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -797,6 +790,7 @@ export const RESOURCES = {
       },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -814,13 +808,7 @@ export const RESOURCES = {
       { name: "name", label: "Name", type: "text", required: true },
       { name: "photoUrl", label: "Photo", type: "image" },
       { name: "designation", label: "Designation", type: "text" },
-      {
-        name: "staffType",
-        label: "Staff type",
-        type: "select",
-        options: STAFF_TYPES,
-        helpText: "Decides which staff list the person appears in.",
-      },
+      { name: "staffType", label: "Staff type", type: "select", options: STAFF_TYPES },
       { name: "department", label: "Department", type: "text" },
       { name: "phone", label: "Phone", type: "text", hideInTable: true },
       {
@@ -831,6 +819,7 @@ export const RESOURCES = {
       },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -857,6 +846,7 @@ export const RESOURCES = {
       { name: "message", label: "Message", type: "textarea", hideInTable: true },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -883,6 +873,7 @@ export const RESOURCES = {
       { name: "contactNumber", label: "Contact", type: "text", hideInTable: true },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -909,6 +900,7 @@ export const RESOURCES = {
       },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 
@@ -925,67 +917,34 @@ export const RESOURCES = {
     publicFilter: { status: "published" },
     fields: [
       { name: "title", label: "Title", type: "text", required: true },
-      {
-        name: "excerpt",
-        label: "Excerpt",
-        type: "textarea",
-        hideInTable: true,
-        helpText: "One or two sentences shown on the list page.",
-      },
+      { name: "slug", label: "Slug", type: "text" },
+      { name: "excerpt", label: "Excerpt", type: "textarea", hideInTable: true, helpText: "One or two sentences shown on the list page." },
       { name: "content", label: "Content", type: "textarea", hideInTable: true },
       { name: "imageUrl", label: "Featured image", type: "image" },
-      {
-        name: "category",
-        label: "Category",
-        type: "select",
-        options: POST_CATEGORIES,
-      },
+      { name: "category", label: "Category", type: "select", options: POST_CATEGORIES },
       { name: "author", label: "Author", type: "text", hideInTable: true },
+      { name: "status", label: "Status", type: "select", options: POST_STATUSES, helpText: "Draft posts are never shown on the website." },
       { name: "publishedAt", label: "Published", type: "date" },
-      {
-        name: "status",
-        label: "Status",
-        type: "select",
-        options: POST_STATUSES,
-        helpText: "Draft posts are never shown on the website.",
-      },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
-
   programs: {
     slug: "programs",
     label: "Academic Programs",
     singular: "Program",
-    description:
-      "The classes taught and the higher-secondary groups shown on the Academic Programs page.",
+    description: "The classes taught and the higher-secondary groups shown on the Academic Programs page.",
     group: "Institution",
     createSchema: programCreate,
     updateSchema: programCreate.partial(),
     defaultSort: { order: 1, createdAt: 1 },
     searchFields: ["title", "description"],
     fields: [
-      {
-        name: "title",
-        label: "Name",
-        type: "text",
-        required: true,
-        placeholder: "e.g. Class 6, or Science",
-      },
-      {
-        name: "level",
-        label: "Level",
-        type: "select",
-        options: PROGRAM_LEVELS,
-        helpText: "Secondary shows as a class tile; higher-secondary as a group card.",
-      },
-      {
-        name: "description",
-        label: "Description",
-        type: "textarea",
-        hideInTable: true,
-      },
+      { name: "title", label: "Name", type: "text", required: true, placeholder: "e.g. Class 6, or Science" },
+      { name: "level", label: "Level", type: "select", options: PROGRAM_LEVELS, helpText: "Secondary shows as a class tile; higher-secondary as a group card." },
+      { name: "description", label: "Description", type: "textarea", hideInTable: true },
       { name: "order", label: "Order", type: "number" },
       { name: "isActive", label: "Active", type: "boolean" },
+      { name: "isDemo", label: "Demo content", type: "boolean" },
     ],
   },
 } as const satisfies Record<string, ResourceConfig>;

@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     await connectDB();
     const updated = await resolved.model
       .findByIdAndUpdate(resolved.id, update, {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       })
       .lean();

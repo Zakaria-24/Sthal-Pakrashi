@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
 import { env } from "@/lib/env";
+import { initializeMongoDns } from "@/lib/mongodb-dns";
+import { MongoConnectionError } from "@/lib/mongodb-diagnostics";
 
 /**
  * Next.js hot-reloads modules in development, which would otherwise open a new
@@ -23,16 +25,24 @@ const cached: MongooseCache = globalCache._mongoose ?? {
 globalCache._mongoose = cached;
 
 export async function connectDB(): Promise<typeof mongoose> {
-  if (cached.conn) return cached.conn;
+  if (cached.conn && mongoose.connection.readyState === 1) return cached.conn;
+  if (cached.conn && mongoose.connection.readyState !== 1) cached.conn = null;
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(env.MONGODB_URI, {
-      dbName: env.MONGODB_DB_NAME,
-      bufferCommands: false,
-      // Fail fast instead of hanging: the public site relies on a quick
-      // failure to fall back to its bundled placeholder content.
-      serverSelectionTimeoutMS: 8000,
-    });
+    cached.promise = (async () => {
+      try {
+        // Run immediately before connect() so this is ordered ahead of the
+        // MongoDB driver's mongodb+srv SRV/TXT queries in the Node runtime.
+        initializeMongoDns();
+        return await mongoose.connect(env.MONGODB_URI, {
+          dbName: env.MONGODB_DB_NAME,
+          bufferCommands: false,
+          serverSelectionTimeoutMS: 12000,
+        });
+      } catch (error) {
+        throw new MongoConnectionError(error);
+      }
+    })();
   }
 
   try {
@@ -40,7 +50,12 @@ export async function connectDB(): Promise<typeof mongoose> {
   } catch (error) {
     // Reset so the next request retries instead of reusing a rejected promise.
     cached.promise = null;
-    throw error;
+    cached.conn = null;
+    const failure = error instanceof MongoConnectionError
+      ? error
+      : new MongoConnectionError(error);
+    console.error("[db] MongoDB connection failed", failure.diagnostic);
+    throw failure;
   }
 
   return cached.conn;

@@ -43,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PageHeader, PageShell } from "@/components/page-header";
 
 const STATUSES = ["submitted", "under-review", "accepted", "rejected"] as const;
 
@@ -177,14 +178,12 @@ export function ApplicationsManager() {
   const all = Object.values(counts).reduce((sum, n) => sum + n, 0);
 
   return (
-    <div className="space-y-6 p-6">
-      <header>
-        <h1 className="text-h1 text-foreground">Applications</h1>
-        <p className="text-muted-foreground text-sm">
-          Online admission applications. This information is private — it is
-          never shown on the public website.
-        </p>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Admission"
+        title="Applications"
+        description="Online admission applications. This information is private — it is never shown on the public website."
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <Input
@@ -215,7 +214,7 @@ export function ApplicationsManager() {
       </div>
 
       {loadError ? (
-        <div className="border-destructive/40 bg-destructive/5 rounded-md border p-4">
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
           <p className="text-destructive text-sm font-medium">{loadError}</p>
           <Button variant="outline" size="sm" className="mt-3" onClick={load}>
             Retry
@@ -447,7 +446,7 @@ export function ApplicationsManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageShell>
   );
 }
 

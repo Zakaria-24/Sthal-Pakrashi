@@ -21,6 +21,7 @@ const BannerSchema = new Schema(
     ctaLabel: { type: String, default: "" },
     ctaLink: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -43,6 +44,7 @@ const NoticeSchema = new Schema(
     expiresAt: { type: Date },
     isPinned: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
@@ -65,6 +67,7 @@ const EventSchema = new Schema(
     imageUrl: { type: String, default: "" },
     isFeatured: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
@@ -84,6 +87,7 @@ const GalleryItemSchema = new Schema(
     },
     tags: { type: [String], default: [] },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -100,6 +104,7 @@ const AlumniSchema = new Schema(
     occupation: { type: String, default: "" },
     testimonial: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -116,6 +121,7 @@ const FounderSchema = new Schema(
     education: { type: String, default: "" },
     message: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -132,6 +138,7 @@ const CommitteeMemberSchema = new Schema(
     education: { type: String, default: "" },
     contactNumber: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -156,6 +163,7 @@ const LeadershipMessageSchema = new Schema(
     photoUrl: { type: String, default: "" },
     message: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -181,6 +189,7 @@ const VideoItemSchema = new Schema(
     },
     publishedAt: { type: Date, default: () => new Date() },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -201,6 +210,7 @@ const UsefulLinkSchema = new Schema(
       default: "government",
     },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -222,6 +232,7 @@ const UniformItemSchema = new Schema(
     description: { type: String, default: "" },
     imageUrl: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -246,6 +257,7 @@ const RecognitionSchema = new Schema(
     expiryDate: { type: Date },
     documentUrl: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -272,7 +284,7 @@ const ClassInfoSchema = new Schema(
       enum: ["bangla", "english", "both"],
       default: "bangla",
     },
-    /** Higher-secondary group, where the class is split into groups. */
+    /** Higher-secondary classes can be separated by academic group. */
     group: {
       type: String,
       enum: ["none", "science", "humanities", "business"],
@@ -281,6 +293,7 @@ const ClassInfoSchema = new Schema(
     boys: { type: Number, default: 0 },
     girls: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -308,6 +321,7 @@ const AcademicDocumentSchema = new Schema(
     fileUrl: { type: String, default: "" },
     publishedAt: { type: Date, default: () => new Date() },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -325,7 +339,7 @@ const StaffSchema = new Schema(
     name: { type: String, required: true, trim: true },
     photoUrl: { type: String, default: "" },
     designation: { type: String, default: "" },
-    /** Which of the public staff lists the person appears in. */
+    /** Which public staff list contains the record. */
     staffType: {
       type: String,
       enum: ["administrative", "support"],
@@ -335,6 +349,7 @@ const StaffSchema = new Schema(
     phone: { type: String, default: "" },
     joiningDate: { type: Date },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -354,6 +369,7 @@ const TeacherSchema = new Schema(
     phone: { type: String, default: "" },
     joiningDate: { type: Date },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
@@ -362,7 +378,7 @@ export type TeacherDoc = InferSchemaType<typeof TeacherSchema>;
 export const Teacher = buildModel("Teacher", TeacherSchema);
 
 /* -------------------------------------------------------------------- Post */
-/** Blog & news. Only `published` posts are ever returned to the public site. */
+/** Blog and news posts. Only published posts are returned publicly. */
 export const POST_CATEGORIES = [
   "academic",
   "campus-life",
@@ -390,15 +406,13 @@ const PostSchema = new Schema(
     category: { type: String, enum: POST_CATEGORIES, default: "academic" },
     author: { type: String, default: "" },
     status: { type: String, enum: ["draft", "published"], default: "draft" },
+    isDemo: { type: Boolean, default: false },
     publishedAt: { type: Date, default: () => new Date() },
   },
   { timestamps: true },
 );
 
-/**
- * A post always has a URL-safe slug. Titles with no Latin characters (Bengali)
- * slugify to nothing, so they get a short random one; clashes get a suffix.
- */
+/** Assign a URL-safe stable slug; non-Latin titles get a short fallback. */
 PostSchema.pre("validate", async function () {
   if (this.slug) return;
   const base = slugify(this.title) || "post";
@@ -413,18 +427,15 @@ PostSchema.pre("validate", async function () {
 export type PostDoc = InferSchemaType<typeof PostSchema>;
 export const Post = buildModel("Post", PostSchema);
 
-/* ----------------------------------------------------------------- Program */
-/** Academic programs: the classes taught and the higher-secondary groups. */
+/* ------------------------------------------------------------------ Program */
+/** Classes and higher-secondary groups displayed on the academic page. */
 const ProgramSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
-    level: {
-      type: String,
-      enum: ["secondary", "higher-secondary"],
-      default: "secondary",
-    },
+    level: { type: String, enum: ["secondary", "higher-secondary"], default: "secondary" },
     description: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isDemo: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },

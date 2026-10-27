@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { FolderOpen, Pencil, Plus, Search, Trash2 } from "lucide-react";
 
 import {
   RESOURCE_MAP,
@@ -10,6 +11,8 @@ import {
 } from "@/lib/resource-config";
 import { api, type Record_ } from "@/lib/client-api";
 import { FieldInput } from "@/components/field-input";
+import { PageHeader, PageShell } from "@/components/page-header";
+import { RESOURCE_ICONS } from "@/lib/resource-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -143,26 +146,52 @@ export function ResourceManager({ slug }: { slug: ResourceSlug }) {
   }
 
   const dialogOpen = creating || editing !== null;
+  const Icon = RESOURCE_ICONS[slug];
+  const demoCount = items.filter((item) => item.isDemo === true).length;
 
   return (
-    <div className="space-y-6 p-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-h1 text-foreground">{config.label}</h1>
-          <p className="text-muted-foreground text-sm">{config.description}</p>
-        </div>
-        <Button onClick={openCreate}>Add {config.singular.toLowerCase()}</Button>
-      </header>
-
-      <Input
-        placeholder={`Search ${config.label.toLowerCase()}…`}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-sm"
+    <PageShell>
+      <PageHeader
+        eyebrow={config.group}
+        title={config.label}
+        description={config.description}
+        actions={
+          <Button onClick={openCreate} size="lg">
+            <Plus />
+            Add {config.singular.toLowerCase()}
+          </Button>
+        }
       />
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            aria-label={`Search ${config.label.toLowerCase()}`}
+            placeholder={`Search ${config.label.toLowerCase()}…`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-10 bg-card pl-9"
+          />
+        </div>
+        {!loading && !loadError && (
+          <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              <span className="font-semibold text-foreground">{items.length}</span>{" "}
+              {items.length === 1 ? "record" : "records"}
+            </span>
+            {demoCount > 0 && (
+              <span className="rounded-full border border-dashed border-gold-dark bg-gold-tint px-2 py-0.5 text-xs font-semibold text-on-gold">
+                {demoCount} demo
+              </span>
+            )}
+          </p>
+        )}
+      </div>
+
       {loadError ? (
-        <div className="border-destructive/40 bg-destructive/5 rounded-md border p-4">
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
           <p className="text-destructive text-sm font-medium">{loadError}</p>
           <p className="text-muted-foreground mt-1 text-xs">
             Check that the database is running, then try again.
@@ -172,53 +201,79 @@ export function ResourceManager({ slug }: { slug: ResourceSlug }) {
           </Button>
         </div>
       ) : loading ? (
-        <div className="space-y-2">
-          {[0, 1, 2].map((row) => (
-            <Skeleton key={row} className="h-12 w-full" />
+        <div className="space-y-2 rounded-xl border bg-card p-3 shadow-card">
+          {[0, 1, 2, 3].map((row) => (
+            <Skeleton key={row} className="h-11 w-full" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-md border border-dashed p-10 text-center">
-          <p className="text-muted-foreground text-sm">
-            No {config.label.toLowerCase()} yet.
+        <div className="flex flex-col items-center rounded-xl border border-dashed bg-card px-6 py-12 text-center">
+          <span className="flex size-12 items-center justify-center rounded-full bg-brand-subtle text-brand">
+            {search ? <FolderOpen className="size-5" /> : <Icon className="size-5" />}
+          </span>
+          <p className="mt-3 font-heading text-h3 text-foreground">
+            {search ? "No matches" : `No ${config.label.toLowerCase()} yet`}
           </p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={openCreate}>
-            Add the first one
-          </Button>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            {search
+              ? "Try a different search term."
+              : "This section is empty on the website until something is added here."}
+          </p>
+          {!search && (
+            <Button variant="outline" className="mt-4" onClick={openCreate}>
+              <Plus />
+              Add the first one
+            </Button>
+          )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-card">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/70 hover:bg-muted/70">
                 {tableFields.map((field) => (
-                  <TableHead key={field.name}>{field.label}</TableHead>
+                  <TableHead
+                    key={field.name}
+                    className="h-11 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                  >
+                    {field.label}
+                  </TableHead>
                 ))}
-                <TableHead className="w-32 text-right">Actions</TableHead>
+                <TableHead className="h-11 w-40 text-right text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {items.map((item) => (
-                <TableRow key={String(item._id)}>
-                  {tableFields.map((field) => (
-                    <TableCell key={field.name}>
+                <TableRow key={String(item._id)} className="hover:bg-brand-subtle/50">
+                  {tableFields.map((field, index) => (
+                    <TableCell key={field.name} className="py-3">
                       <CellValue field={field} value={item[field.name]} />
+                      {index === 0 && item.isDemo === true && (
+                        <span className="mt-1 inline-block rounded-full border border-dashed border-gold-dark bg-gold-tint px-1.5 py-px text-eyebrow text-on-gold">
+                          Demo
+                        </span>
+                      )}
                     </TableCell>
                   ))}
-                  <TableCell className="space-x-2 text-right">
+                  <TableCell className="py-3 text-right whitespace-nowrap">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => openEdit(item)}
+                      className="text-brand hover:bg-brand-subtle hover:text-brand"
                     >
+                      <Pencil />
                       Edit
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => setDeleteTarget(item)}
                     >
+                      <Trash2 />
                       Delete
                     </Button>
                   </TableCell>
@@ -289,7 +344,7 @@ export function ResourceManager({ slug }: { slug: ResourceSlug }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageShell>
   );
 }
 

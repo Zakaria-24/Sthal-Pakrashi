@@ -14,7 +14,7 @@ import { fail, handleError, ok, preflight } from "@/lib/api-response";
  * blocks everyone else, and each handler re-checks as defence in depth.
  */
 
-export const createUserSchema = z.object({
+const createUserSchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   email: z.string().trim().toLowerCase().min(3, "Email is required"),
   role: z.enum(["admin", "moderator"]).default("moderator"),
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     if (email === env.SUPER_ADMIN_EMAIL) {
       return fail(
-        "That address is the super admin, which signs in with a one-time code.",
+        "That address is reserved for the super admin.",
         409,
         origin,
       );

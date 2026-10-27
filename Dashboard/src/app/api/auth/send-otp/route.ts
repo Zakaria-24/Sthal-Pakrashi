@@ -46,16 +46,18 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    // The super admin account is created on first use and always kept active,
-    // so the owner can never be locked out of their own dashboard.
-    const superAdmin = await User.findOneAndUpdate(
-      { email: normalised },
-      {
-        $set: { role: "superAdmin", isActive: true },
-        $setOnInsert: { name: env.SUPER_ADMIN_NAME, email: normalised },
-      },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
-    );
+    const superAdmin = await User.findOne({
+      email: normalised,
+      role: "superAdmin",
+      isActive: true,
+    });
+    if (!superAdmin) {
+      return fail(
+        "The super admin has not been initialized. Run npm run bootstrap:super-admin in the Dashboard project.",
+        503,
+        origin,
+      );
+    }
 
     // Throttle resends so the address can't be flooded.
     const existing = await Otp.findOne({ email: normalised }).sort({

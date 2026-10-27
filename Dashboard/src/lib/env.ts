@@ -23,10 +23,32 @@ function optional(name: string, fallback = ""): string {
 export const env = {
   // --- Database ---
   get MONGODB_URI() {
-    return required("MONGODB_URI");
+    const uri = required("MONGODB_URI");
+    if (process.env.NODE_ENV === "production") {
+      try {
+        const hostname = new URL(uri).hostname.toLowerCase();
+        if (["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname)) {
+          throw new Error(
+            "Production MONGODB_URI must point to a remote database, not localhost.",
+          );
+        }
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("Production")) {
+          throw error;
+        }
+        throw new Error("Production MONGODB_URI must be a valid remote MongoDB URI.");
+      }
+    }
+    return uri;
   },
   get MONGODB_DB_NAME() {
-    return optional("MONGODB_DB_NAME", "school_cms");
+    const name = process.env.MONGODB_DB_NAME?.trim();
+    if (!name && process.env.NODE_ENV === "production") {
+      throw new Error(
+        'Missing required environment variable "MONGODB_DB_NAME" in production.',
+      );
+    }
+    return name || "school_cms";
   },
 
   // --- Auth ---
@@ -34,9 +56,9 @@ export const env = {
     return required("JWT_SECRET");
   },
   /**
-   * The one account that always exists. There is no password anywhere in this
-   * system — this address receives a one-time code by email, and it is the
-   * only account that can create other users.
+   * The super admin's address. It receives one-time codes by email; the
+   * account's password is set from the terminal (`npm run bootstrap:super-admin`).
+   * It is the only account that can create other users.
    */
   get SUPER_ADMIN_EMAIL() {
     return required("SUPER_ADMIN_EMAIL").toLowerCase().trim();
@@ -112,7 +134,7 @@ export const env = {
 
   // --- CORS: which public site(s) may read this API ---
   get ALLOWED_ORIGINS() {
-    return optional("ALLOWED_ORIGINS", "http://localhost:3001")
+    return optional("ALLOWED_ORIGINS", "http://localhost:3004")
       .split(",")
       .map((o) => o.trim())
       .filter(Boolean);

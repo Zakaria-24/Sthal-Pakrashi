@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const settings = await Settings.findOneAndUpdate(
       { key: "site" },
       { $setOnInsert: { key: "site" } },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
+      { returnDocument: "after", upsert: true, setDefaultsOnInsert: true },
     ).lean();
 
     return ok(settings, origin);
@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
 
     await connectDB();
     const updated = await Settings.findOneAndUpdate({ key: "site" }, update, {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       runValidators: true,
       setDefaultsOnInsert: true,

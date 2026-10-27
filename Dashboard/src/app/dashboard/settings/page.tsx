@@ -26,6 +26,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PageHeader, PageShell } from "@/components/page-header";
 
 /**
  * Site identity lives in the database rather than in code, which is what keeps
@@ -213,29 +214,28 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4 p-6">
+      <PageShell>
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64 w-full" />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-h1 text-foreground">Site settings</h1>
-          <p className="text-muted-foreground text-sm">
-            These values appear on the public website.
-          </p>
-        </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Saving…" : "Save changes"}
-        </Button>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Configuration"
+        title="Site settings"
+        description="These values appear on the public website."
+        actions={
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        }
+      />
 
       {error && (
-        <div className="border-destructive/40 bg-destructive/5 rounded-md border p-4">
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
           <p className="text-destructive text-sm">{error}</p>
         </div>
       )}
@@ -375,6 +375,6 @@ export default function SettingsPage() {
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
-    </div>
+    </PageShell>
   );
 }

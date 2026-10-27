@@ -25,8 +25,11 @@ database unavailable (the public site then uses its bundled fallbacks).
 | Admin | Session whose role is `admin` or `superAdmin`. Re-checked against the database on private endpoints (`src/lib/require-admin.ts`). |
 | Super admin | `superAdmin` only (user management). |
 
-**CORS** — only origins in `ALLOWED_ORIGINS` (the public website, `http://localhost:3004`)
-receive `Access-Control-Allow-Origin`. The main Uddom project's origins are not listed.
+**CORS** — only exact origins in `ALLOWED_ORIGINS` (local public site:
+`http://localhost:3004`) receive `Access-Control-Allow-Origin`; wildcard origins
+are never reflected with credentials. Public content is normally fetched from
+the website's server components, so this flow does not depend on browser CORS.
+Dashboard browser requests are same-origin.
 
 ---
 

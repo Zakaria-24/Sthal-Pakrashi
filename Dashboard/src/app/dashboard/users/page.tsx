@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PageHeader, PageShell } from "@/components/page-header";
 
 /**
  * Staff accounts, super admin only.
@@ -75,7 +76,8 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    load();
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   async function handleDelete() {
@@ -101,19 +103,20 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-h1 text-foreground">Users</h1>
-          <p className="text-muted-foreground text-sm">
-            Staff accounts and their passwords. Only you can change these.
-          </p>
-        </div>
-        <Button onClick={() => setCreating(true)}>Add user</Button>
-      </header>
+    <PageShell>
+      <PageHeader
+        eyebrow="Configuration"
+        title="Users"
+        description="Staff accounts and their passwords. Only you can change these."
+        actions={
+          <Button onClick={() => setCreating(true)} size="lg">
+            Add user
+          </Button>
+        }
+      />
 
       {error ? (
-        <div className="border-destructive/40 bg-destructive/5 rounded-md border p-4">
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
           <p className="text-destructive text-sm">{error}</p>
           <Button variant="outline" size="sm" className="mt-3" onClick={load}>
             Retry
@@ -215,11 +218,13 @@ export default function UsersPage() {
         onSaved={load}
       />
       <EditUserDialog
+        key={editing ? String(editing._id) : "closed"}
         user={editing}
         onClose={() => setEditing(null)}
         onSaved={load}
       />
       <PasswordDialog
+        key={passwordTarget ? String(passwordTarget._id) : "closed"}
         user={passwordTarget}
         onClose={() => setPasswordTarget(null)}
       />
@@ -242,7 +247,7 @@ export default function UsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageShell>
   );
 }
 
@@ -386,16 +391,9 @@ function EditUserDialog({
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("moderator");
+  const [name, setName] = useState(String(user?.name ?? ""));
+  const [role, setRole] = useState(String(user?.role ?? "moderator"));
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      setName(String(user.name ?? ""));
-      setRole(String(user.role ?? "moderator"));
-    }
-  }, [user]);
 
   async function handleSave() {
     if (!user) return;
@@ -454,10 +452,6 @@ function PasswordDialog({
 }) {
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (user) setPassword("");
-  }, [user]);
 
   async function handleSave() {
     if (!user) return;

@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     }
 
     const updated = await User.findByIdAndUpdate(id, update, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
       projection: { passwordHash: 0 },
     }).lean();

@@ -3,18 +3,17 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { connectDB } from "@/lib/db";
-import { env } from "@/lib/env";
 import { User } from "@/models/User";
 import { createSessionToken, setSessionCookie } from "@/lib/auth";
 import { fail, handleError, ok, preflight } from "@/lib/api-response";
 
 /**
- * Password sign-in for staff accounts (admin / moderator).
+ * Password sign-in for every account.
  *
- * Their passwords are set and changed by the super admin only — there is no
- * self-service change or reset anywhere in this system. The super admin does
- * not have a password and cannot sign in here; that account uses a one-time
- * code (`/api/auth/send-otp`).
+ * Staff (admin / moderator) passwords are set and changed by the super admin
+ * only. The super admin's own password is set from the terminal with
+ * `npm run bootstrap:super-admin`; that account can also use a one-time code
+ * (`/api/auth/send-otp`).
  */
 
 const schema = z.object({
@@ -33,14 +32,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password } = schema.parse(body);
     const normalised = email.toLowerCase().trim();
-
-    if (normalised === env.SUPER_ADMIN_EMAIL) {
-      return fail(
-        "The super admin signs in with a one-time code, not a password.",
-        403,
-        origin,
-      );
-    }
 
     await connectDB();
 

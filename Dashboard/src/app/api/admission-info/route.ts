@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const info = await AdmissionInfo.findOneAndUpdate(
       { key: "admission" },
       { $setOnInsert: { key: "admission" } },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
+      { returnDocument: "after", upsert: true, setDefaultsOnInsert: true },
     ).lean();
     return ok(info, origin);
   } catch (error) {
@@ -40,7 +40,7 @@ export async function PATCH(request: NextRequest) {
 
     await connectDB();
     const updated = await AdmissionInfo.findOneAndUpdate({ key: "admission" }, update, {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       runValidators: true,
       setDefaultsOnInsert: true,

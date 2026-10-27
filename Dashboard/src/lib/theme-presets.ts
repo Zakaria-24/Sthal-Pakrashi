@@ -104,15 +104,15 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   {
     key: "green",
     label: "Green",
-    brand: "oklch(0.50 0.12 150)",
-    brandForeground: "oklch(0.99 0 0)",
-    brandHover: "oklch(0.43 0.12 150)",
-    brandSubtle: "oklch(0.96 0.02 150)",
+    brand: "#03594e",
+    brandForeground: "#ffffff",
+    brandHover: "#024841",
+    brandSubtle: "#eef4f1",
     dark: {
-      brand: "oklch(0.70 0.10 150)",
-      brandForeground: "oklch(0.17 0.02 150)",
-      brandHover: "oklch(0.76 0.10 150)",
-      brandSubtle: "oklch(0.28 0.04 150)",
+      brand: "#66c5b3",
+      brandForeground: "#06211d",
+      brandHover: "#8bd7c8",
+      brandSubtle: "#183d36",
     },
   },
   {
@@ -174,7 +174,7 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   },
 ] as const;
 
-export const DEFAULT_THEME_KEY = "indigo";
+export const DEFAULT_THEME_KEY = "green";
 
 /** Never throws: an unknown or missing key resolves to the default preset. */
 export function getPreset(key?: string | null): ThemePreset {

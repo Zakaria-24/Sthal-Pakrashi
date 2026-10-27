@@ -20,24 +20,37 @@ npm install
 cp .env.example .env.local
 ```
 
-Fill in `.env.local` — at minimum `MONGODB_URI`, `JWT_SECRET`, `ADMIN_EMAIL`
-and `ADMIN_PASSWORD`. Generate a secret with:
+Fill in `.env.local` — at minimum `MONGODB_URI`, `JWT_SECRET`, and
+`SUPER_ADMIN_EMAIL`. The Super Admin signs in with the password set by
+`npm run bootstrap:super-admin`, or with a one-time code. Configure
+SMTP to deliver codes by email; without SMTP, codes print in the Dashboard
+server terminal for local development. Generate `JWT_SECRET` with:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 ```
 
-Then start it:
+Initialize the first Super Admin once, then preview and import the current
+public-site settings and links. The dry run reads the database without writes:
+
+```bash
+npm run bootstrap:super-admin
+npm run db:import:dry-run
+npm run db:import
+```
+
+Then start the Dashboard and API:
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:3000 and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+`bootstrap:super-admin` asks for the email, name and password (typed hidden,
+entered twice). Run it again any time to reset the Super Admin's password — it
+updates the existing account instead of adding a second one.
 
-> **First login creates the admin account.** If the database has no admin yet,
-> the first successful login with those credentials creates one. There is no
-> seed script to run. Change `ADMIN_PASSWORD` before deploying anywhere real.
+Open http://localhost:3003 and sign in with that email and password, or request
+a one-time code.
 
 ### No database handy?
 
@@ -50,11 +63,31 @@ later is purely an `.env.local` change.
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Dashboard + API on port 3000 |
+| `npm run dev` | Dashboard + API on port 3003 (Webpack dev server) |
 | `npm run dev:db` | Local MongoDB for development |
+| `npm run db:import:dry-run` | Preview import counts without database writes |
+| `npm run db:import` | Import current public fallback settings and content |
+| `npm run db:sync-demo:dry-run` | Compare local `sth_demo_preview` with Atlas and plan inserts; no writes |
+| `npm run db:sync-demo:atlas -- --apply --confirm-atlas-demo-import` | Explicitly confirm inserting demo records into the configured Atlas database |
+| `npm run db:migrate:atlas -- --audit` | Audit local and Atlas collections, static sources, and migration conflicts (read-only) |
+| `npm run db:migrate:atlas:dry-run -- --include-demo` | Preview public content including gated demo records (read-only) |
+| `npm run bootstrap:super-admin` | Create initial OTP-authenticated Super Admin |
 | `npm run build` | Production build |
 | `npm start` | Run the production build |
 | `npm run lint` | ESLint |
+
+The demo sync reads only documents marked `isDemo: true` from the local
+`sth_demo_preview` database. It inserts missing documents by their existing
+`_id`, skips matching demo documents, and leaves ID collisions with non-demo
+documents untouched. The target must be the configured MongoDB Atlas database
+`Sthal-Pakrashi`. The dry run must succeed and the displayed target must be
+verified before you run the explicit confirmation command above. Never use the
+demo import command with a production database unless you intend to publish
+fictional content.
+
+See [the full Atlas audit](./docs/atlas-migration-audit.md) and
+[Bash migration guide](./docs/atlas-migration-guide.md) for collection counts,
+review requirements, DNS setup, and the explicitly confirmed apply workflow.
 
 ## How it is organised
 
@@ -102,8 +135,12 @@ The API endpoint, sidebar link, table and form all appear automatically.
 
 ## API
 
-Reads are public so the website can fetch content without credentials. Writes
-require the admin session cookie, enforced in `src/proxy.ts`.
+The separate Public Website runs on port 3004. Its Server Components call this
+API using server-only `API_BASE_URL` (default `http://localhost:3003`), so the
+normal content flow does not depend on browser CORS. Dashboard browser calls
+are same-origin. Any cross-origin browser access is limited to exact origins
+in `ALLOWED_ORIGINS`. Reads expose published content; writes require a
+role-checked session.
 
 | Method | Route | Auth |
 | --- | --- | --- |
@@ -165,3 +202,49 @@ endpoint, its access level and its request/response shape is documented in [API.
 Admission is managed under **Admission info** (open/closed switch + page content) and
 **Applications** (private; admins only) in the sidebar. Applicants' documents are private
 Cloudinary files under `<CLOUDINARY_FOLDER>/applications/`.
+
+## Explicit demo content preview
+
+The repository includes fictional preview records in `scripts/demo-content.mjs`. The separate importer only targets a loopback MongoDB URI by default; it does not run during startup and does not change the existing public fallback importer. Every imported record has `isDemo: true`, and the Dashboard exposes that marker for editing. Public cards show a localized demo badge. Names and activities are fictional; local fallback photos are examples and are not asserted to depict the listed activity or staff member.
+
+Start local MongoDB in one terminal with `npm run dev:db`. In another terminal, use this isolated database:
+
+```powershell
+$env:MONGODB_URI = "mongodb://127.0.0.1:27017"
+$env:MONGODB_DB_NAME = "sth_demo_preview"
+npm run db:import:demo:dry-run
+npm run db:import:demo
+npm run db:import:demo
+```
+
+The first command previews without writing; the next imports; the last confirms repeat safety (existing deterministic IDs are skipped). This targets isolated local `sth_demo_preview` and leaves the configured `.env` database untouched.
+
+Run the Dashboard API against that same local database so the Public Website can read the preview records. Stop any existing Dashboard dev server first, then start it with the same environment overrides:
+
+```powershell
+$env:MONGODB_URI = "mongodb://127.0.0.1:27017"
+$env:MONGODB_DB_NAME = "sth_demo_preview"
+npm run dev
+```
+
+Keep the local database and Dashboard API running while using the Public Website. Open the Dashboard at `/dashboard` on port 3003 and inspect Banners, Notices, Events, Gallery, Teachers, Alumni, and Academic Programs. The Public Website at port 3004 reads these resources through server-to-server API requests.
+
+Remote imports are blocked unless both `--allow-production-demo` and `DEMO_IMPORT_PRODUCTION_ACK=I_UNDERSTAND_DEMO_DATA_IS_PUBLIC` are explicitly provided. Review the target database and understand that active demo records are public before using that opt-in. No cleanup command is provided; remove individual records manually in the Dashboard after confirming their Demo content marker. Never bulk-delete records based only on title or date.
+
+### Atlas SRV DNS override
+
+If Node.js cannot resolve an Atlas SRV record with the system resolver, set
+`MONGODB_DNS_SERVERS` in the PowerShell process before starting the Dashboard
+or running a database script. The value must be comma-separated IPv4/IPv6
+addresses; the app and scripts validate it and call `dns.setServers()` before
+Mongoose connects. This does not alter `MONGODB_URI` or authentication:
+
+```powershell
+$env:MONGODB_DNS_SERVERS = "1.1.1.1,8.8.8.8"
+npm run db:import:dry-run
+```
+
+The same environment variable is read by the Dashboard process. It is optional
+when the system DNS resolver already resolves the Atlas SRV record.
+
+This preview intentionally leaves founders, committee, leadership messages, recognitions, admissions, class approval/count disclosures, uniforms, academic documents, staff identities, examination results, useful links, and institution settings untouched. Those require verified school-specific information or existing authoritative documents. Demo teacher/alumni names are fictional, have no photos or contact details, and are labelled on public profile cards.

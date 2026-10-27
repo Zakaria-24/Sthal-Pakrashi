@@ -7,9 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* Same families as the public site: Inter for UI text, Poppins for
+     headings, Noto Sans Bengali for the Bangla content admins type. */
+  --font-sans: var(--font-inter), var(--font-noto-bengali), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-poppins), var(--font-noto-bengali), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -54,6 +56,23 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-hover: var(--brand-hover);
   --color-brand-subtle: var(--brand-subtle);
+
+  /* Public-site palette (bg-gold, text-ink-soft, bg-canvas ...). */
+  --color-gold: var(--gold);
+  --color-gold-dark: var(--gold-dark);
+  --color-gold-tint: var(--gold-tint);
+  --color-on-gold: var(--on-gold);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-canvas: var(--canvas);
+  --color-on-brand-muted: var(--on-brand-muted);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning-subtle: var(--warning-subtle);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-lift: var(--shadow-lift);
 }
 
 /* ==========================================================================
@@ -70,17 +89,35 @@
    the Typography component in each app).
    ========================================================================== */
 @theme {
-  --text-h1: 2.5rem;
-  --text-h1--line-height: 1.15;
-  --text-h1--font-weight: 600;
+  /* Dashboard page titles are deliberately smaller than the public site's:
+     this is a working tool, and the title shares the row with actions. */
+  --text-h1: 1.75rem;
+  --text-h1--line-height: 1.2;
+  --text-h1--font-weight: 700;
 
-  --text-h2: 1.875rem;
-  --text-h2--line-height: 1.25;
-  --text-h2--font-weight: 600;
+  --text-h2: 1.375rem;
+  --text-h2--line-height: 1.3;
+  --text-h2--font-weight: 700;
 
-  --text-h3: 1.375rem;
-  --text-h3--line-height: 1.35;
+  --text-h3: 1.0625rem;
+  --text-h3--line-height: 1.4;
   --text-h3--font-weight: 600;
+
+  /* Login brand panel headline. */
+  --text-display: 2.25rem;
+  --text-display--line-height: 1.2;
+  --text-display--font-weight: 700;
+
+  /* Big figures on stat cards. */
+  --text-stat: 2rem;
+  --text-stat--line-height: 1.1;
+  --text-stat--font-weight: 700;
+
+  /* Small uppercase labels (sidebar groups, eyebrows). */
+  --text-eyebrow: 0.6875rem;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--font-weight: 700;
+  --tracking-eyebrow: 0.08em;
 
   --text-body-lg: 1.125rem;
   --text-body-lg--line-height: 1.7;
@@ -106,52 +143,74 @@
    Examples:  green 150 · teal 195 · blue 250 · indigo 275 · maroon 20
    ========================================================================== */
 :root {
-  --brand: oklch(0.48 0.14 250);
-  --brand-foreground: oklch(0.99 0 0);
-  --brand-hover: oklch(0.42 0.14 250);
-  --brand-subtle: oklch(0.96 0.02 250);
+  --brand: #03594e;
+  --brand-foreground: #ffffff;
+  --brand-hover: #024841;
+  --brand-subtle: #eef4f1;
+  --gold: #f8cb4e;
+  --gold-dark: #e0ac1e;
+  --ink: #12211d;
+  --ink-soft: #4b5b56;
+  --line: #dde6e2;
+  --gold-tint: #fdf1d6;
+  --on-gold: #22190a;
+  /* App canvas behind the white cards; a whisper of the brand green. */
+  --canvas: #f5f8f7;
+  --on-brand-muted: #bcd9d1;
+  --success: #15803d;
+  --success-subtle: #e7f6ec;
+  --warning-subtle: #fdf1d6;
+  --shadow-card: 0 1px 2px rgb(18 33 29 / 0.04), 0 1px 3px rgb(18 33 29 / 0.06);
+  --shadow-lift: 0 10px 30px -12px rgb(3 89 78 / 0.25);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: var(--canvas);
+  --foreground: var(--ink);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: var(--ink);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: var(--ink);
   --primary: var(--brand);
   --primary-foreground: var(--brand-foreground);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --secondary: #eef4f1;
+  --secondary-foreground: var(--ink);
+  --muted: #eef4f1;
+  --muted-foreground: var(--ink-soft);
+  --accent: #fdf1d6;
+  --accent-foreground: #3a2f10;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: var(--brand);
-  --sidebar-primary-foreground: var(--brand-foreground);
-  --sidebar-accent: var(--brand-subtle);
-  --sidebar-accent-foreground: var(--brand-hover);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: var(--brand);
+  /* Dark brand sidebar like the public site's header brand block. It reads
+     --brand-hover, so the theme picker re-skins it with everything else. */
+  --sidebar: var(--brand-hover);
+  --sidebar-foreground: #e6f1ee;
+  --sidebar-primary: var(--gold);
+  --sidebar-primary-foreground: var(--on-gold);
+  --sidebar-accent: rgb(255 255 255 / 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.1);
+  --sidebar-ring: var(--gold);
 }
 
 .dark {
-  --brand: oklch(0.68 0.13 250);
-  --brand-foreground: oklch(0.16 0.02 250);
-  --brand-hover: oklch(0.75 0.13 250);
-  --brand-subtle: oklch(0.28 0.04 250);
+  --brand: #66c5b3;
+  --brand-foreground: #06211d;
+  --brand-hover: #8bd7c8;
+  --brand-subtle: #183d36;
+  --gold: #f8cb4e;
+  --gold-dark: #e0ac1e;
+  --ink: #12211d;
+  --ink-soft: #4b5b56;
+  --line: #2b4540;
 
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -181,7 +240,7 @@
   --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: var(--brand-foreground);
   --sidebar-accent: var(--brand-subtle);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-accent-foreground: #e8f2ef;
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
