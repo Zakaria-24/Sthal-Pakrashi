@@ -1,0 +1,45 @@
+import {
+  Award,
+  BookOpenCheck,
+  BriefcaseBusiness,
+  CalendarDays,
+  Clapperboard,
+  FileText,
+  GalleryHorizontal,
+  GraduationCap,
+  Images,
+  Landmark,
+  Link2,
+  Megaphone,
+  Newspaper,
+  Quote,
+  School,
+  ShieldCheck,
+  Shirt,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
+
+import type { ResourceSlug } from "@/lib/resource-config";
+
+/** One icon per content type, shared by the sidebar and the overview cards. */
+export const RESOURCE_ICONS: Record<ResourceSlug, LucideIcon> = {
+  banners: GalleryHorizontal,
+  notices: Megaphone,
+  events: CalendarDays,
+  gallery: Images,
+  videos: Clapperboard,
+  uniform: Shirt,
+  links: Link2,
+  messages: Quote,
+  recognitions: ShieldCheck,
+  classes: School,
+  documents: FileText,
+  teachers: GraduationCap,
+  staff: BriefcaseBusiness,
+  founders: Landmark,
+  committee: UsersRound,
+  alumni: Award,
+  posts: Newspaper,
+  programs: BookOpenCheck,
+};

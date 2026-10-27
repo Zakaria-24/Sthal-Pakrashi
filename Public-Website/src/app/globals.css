@@ -1,0 +1,674 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+/* The header has its own steps: the full desktop row (utility bar + one-line
+   navigation) needs ~940px beside the brand block, so it starts at 1280px; below
+   that the green bar + drawer is used. The roomier nav type starts at 1440px. */
+@custom-variant desk (@media (min-width: 1280px));
+@custom-variant wide (@media (min-width: 1440px));
+
+/* ==========================================================================
+   DESIGN TOKENS
+   --------------------------------------------------------------------------
+   The finalized design system, defined ONCE. Components never contain a raw
+   colour, font size or spacing value — they use the Tailwind aliases mapped
+   below (bg-green, text-ink, px-gutter, text-h2 …) or var(--token) directly.
+   ========================================================================== */
+:root {
+  /* Brand palette */
+  --green: #03594e;
+  --green-dark: #024841;
+  --gold: #f8cb4e;
+  --gold-dark: #e0ac1e;
+  --surface: #eef4f1;
+  --ink: #12211d;
+  --ink-soft: #4b5b56;
+  --line: #dde6e2; /* the design's "--border" (renamed: shadcn owns --border) */
+  --footer: #06211d;
+  --footer-text: #cfe0da;
+  --footer-muted: #8fa89f;
+
+  --white: #ffffff;
+  --on-gold: #22190a; /* dark text on gold */
+
+  /* Secondary tones the design uses on top of the palette */
+  --on-gold-soft: #3a2f10; /* body text on a gold card */
+  --on-green-muted: #bcd9d1; /* small text on green */
+  --on-green-soft: #cfe4de; /* labels / body on green */
+  --utility: #eef1f0; /* header utility bar */
+  --pill: #dfe9e5; /* language switcher track */
+  --gold-tint: #fdf1d6; /* icon disc behind gold glyphs */
+  --line-strong: #cdd7d2;
+  --scrim: rgb(6 20 17 / 0.55);
+  --scrim-strong: rgb(6 30 26 / 0.72);
+  --overlay-green: rgb(0 94 75 / 0.67); /* hero stat strip */
+  --overlay-dark: rgb(20 20 20 / 0.62); /* watch-now card body */
+  --stripe-a: #e7efec; /* map placeholder stripes */
+  --stripe-b: #dbe6e0;
+  --stripe-text: #5b6d67;
+
+  /* Layout */
+  --gutter: 24px; /* side padding — steps down on small screens below */
+
+  /* Motion */
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Side padding shrinks progressively: 24 → 18 (≤768) → 16 (≤480) → 14 (≤390) */
+@media (max-width: 768px) {
+  :root {
+    --gutter: 18px;
+  }
+}
+@media (max-width: 480px) {
+  :root {
+    --gutter: 16px;
+  }
+}
+@media (max-width: 390px) {
+  :root {
+    --gutter: 14px;
+  }
+}
+
+/* ==========================================================================
+   BRAND
+   --------------------------------------------------------------------------
+   The legacy --brand* set (used by the shadcn primitives and the not-yet-
+   redesigned pages) now resolves to the design palette. The Dashboard's
+   theme-preset override still targets these four names, so it keeps working
+   for legacy pages; design components read --green/--gold directly.
+   ========================================================================== */
+:root {
+  --brand: var(--green);
+  --brand-foreground: var(--white);
+  --brand-hover: var(--green-dark);
+  --brand-subtle: var(--surface);
+}
+
+/* ==========================================================================
+   TAILWIND THEME — aliases onto the tokens above
+   ========================================================================== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-subtle: var(--brand-subtle);
+
+  /* design palette → bg-green, text-ink-soft, border-line, … */
+  --color-green: var(--green);
+  --color-green-dark: var(--green-dark);
+  --color-gold: var(--gold);
+  --color-gold-dark: var(--gold-dark);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-footer: var(--footer);
+  --color-footer-text: var(--footer-text);
+  --color-footer-muted: var(--footer-muted);
+  --color-white: var(--white);
+  --color-on-gold: var(--on-gold);
+  --color-on-gold-soft: var(--on-gold-soft);
+  --color-on-green-muted: var(--on-green-muted);
+  --color-on-green-soft: var(--on-green-soft);
+  --color-utility: var(--utility);
+  --color-pill: var(--pill);
+  --color-gold-tint: var(--gold-tint);
+  --color-scrim: var(--scrim);
+  --color-scrim-strong: var(--scrim-strong);
+  --color-overlay-green: var(--overlay-green);
+  --color-overlay-dark: var(--overlay-dark);
+  --color-stripe-a: var(--stripe-a);
+  --color-stripe-b: var(--stripe-b);
+  --color-stripe-text: var(--stripe-text);
+
+  /* spacing tokens → px-gutter, py-section, … */
+  --spacing-gutter: var(--gutter);
+
+  /* radii: the shadcn scale is kept; design names added on top */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* elevation — a soft green-tinted shadow, derived from --green */
+  --shadow-soft: 0 12px 30px color-mix(in srgb, var(--green) 8%, transparent);
+  --shadow-lift-sm: 0 14px 28px color-mix(in srgb, var(--green) 10%, transparent);
+  --shadow-lift: 0 16px 32px color-mix(in srgb, var(--green) 14%, transparent);
+  --shadow-lift-lg: 0 20px 40px color-mix(in srgb, var(--green) 25%, transparent);
+  --shadow-dropdown: 0 18px 36px color-mix(in srgb, var(--green) 16%, transparent);
+  --shadow-drawer: -12px 0 32px rgb(0 0 0 / 0.18);
+  --shadow-modal: 0 30px 70px rgb(0 0 0 / 0.35);
+  --shadow-cta: 0 6px 14px color-mix(in srgb, var(--green) 50%, transparent);
+}
+
+@theme {
+  /* Breakpoints sit 1px above the artifact's max-width media queries (≤640, ≤768,
+     ≤1024, ≤1280), so a viewport of exactly 1024px collapses like the artifact. */
+  --breakpoint-sm: 40.0625rem; /* 641 */
+  --breakpoint-md: 48.0625rem; /* 769 */
+  --breakpoint-lg: 64.0625rem; /* 1025 */
+  --breakpoint-xl: 80.0625rem; /* 1281 */
+
+  /* Fonts. Inter (body) + Poppins (headings) have no Bengali glyphs, so
+     Noto Sans Bengali sits second in each stack: the browser falls through to
+     it per-character. html[lang="bn"] below promotes it to first. */
+  --font-sans: var(--font-inter), var(--font-noto-bengali), ui-sans-serif,
+    system-ui, sans-serif;
+  --font-heading: var(--font-poppins), var(--font-noto-bengali), ui-sans-serif,
+    system-ui, sans-serif;
+  --font-bengali: var(--font-noto-bengali), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Layout widths → max-w-site, max-w-wide, … */
+  /* The design's containers are content-box: 1240px of content plus the side
+     gutters. Container is border-box, so the gutters are added back here. */
+  --container-site: calc(1240px + 2 * var(--gutter));
+  --container-wide: calc(1180px + 2 * var(--gutter));
+  --container-mid: calc(1160px + 2 * var(--gutter));
+  --container-narrow: calc(1000px + 2 * var(--gutter));
+  --container-dialog-sm: 28.75rem; /* 460px — detail dialogs */
+  --container-dialog-md: 40rem; /* 640px — search */
+  --container-dialog-lg: 56.25rem; /* 900px — video */
+  --container-drawer: min(20rem, 86vw); /* mobile navigation drawer */
+
+  --spacing-modal-top: 4.375rem; /* 70px — top-anchored dialogs */
+
+  /* Section rhythm → py-section, py-page, … */
+  --spacing-section: 5rem; /* 80px */
+  --spacing-section-sm: 4.5rem; /* 72px */
+  --spacing-page: 4.5rem; /* 72px — page content */
+  --spacing-band-top: 3rem; /* 48px — page-header band */
+  --spacing-band-bottom: 3.5rem; /* 56px */
+
+  /* Radii → rounded-card, rounded-card-lg, rounded-pill */
+  --radius-card: 1rem;
+  --radius-card-lg: 1.25rem;
+  --radius-pill: 100px;
+
+  /* ---- Type scale (fluid where it matters) ----
+     Tailwind v4's --text-* namespace bundles size, line-height and weight into
+     one utility, so pages pull from here instead of picking sizes ad hoc.
+     Colour is intentionally not part of these tokens. */
+  --text-hero: clamp(2rem, 4.6vw, 3.375rem); /* 32 → 54 */
+  --text-hero--line-height: 1.08;
+  --text-hero--font-weight: 800;
+
+  --text-hero-lg: clamp(2.25rem, 10.5vw, 3.5rem); /* 36 → 56 — phone/tablet hero */
+  --text-hero-lg--line-height: 1.1;
+  --text-hero-lg--font-weight: 800;
+
+  --text-h1: clamp(1.75rem, 4vw, 2.625rem); /* 28 → 42 */
+  --text-h1--line-height: 1.15;
+  --text-h1--font-weight: 800;
+
+  --text-h2: clamp(1.625rem, 3vw, 2.25rem); /* 26 → 36 */
+  --text-h2--line-height: 1.25;
+  --text-h2--font-weight: 800;
+
+  --text-title: clamp(1.5rem, 3vw, 1.875rem); /* 24 → 30 — page sub-headings */
+  --text-title--line-height: 1.25;
+  --text-title--font-weight: 800;
+
+  --text-subtitle: clamp(1.375rem, 3vw, 1.625rem); /* 22 → 26 */
+  --text-subtitle--line-height: 1.25;
+  --text-subtitle--font-weight: 800;
+
+  --text-h2-mid: clamp(1.5rem, 3.4vw, 2.125rem); /* 24 → 34 — finder heading */
+  --text-h2-mid--line-height: 1.3;
+  --text-h2-mid--font-weight: 800;
+
+  --text-h2-low: clamp(1.5rem, 3vw, 2rem); /* 24 → 32 — curriculum, testimonials, CTA */
+  --text-h2-low--font-weight: 800;
+
+  --text-h3-sm: clamp(1.125rem, 2.2vw, 1.375rem); /* 18 → 22 — aid heading */
+  --text-h3-sm--line-height: 1.35;
+  --text-h3-sm--font-weight: 800;
+
+  --text-h3: clamp(1.125rem, 2.2vw, 1.625rem); /* 18 → 26 */
+  --text-h3--line-height: 1.35;
+  --text-h3--font-weight: 700;
+
+  --text-h4: 1.0625rem; /* 17 — card titles */
+  --text-h4--line-height: 1.4;
+  --text-h4--font-weight: 700;
+
+  --text-stat: 1.375rem; /* 22 — figures */
+  --text-stat--line-height: 1.2;
+  --text-stat--font-weight: 800;
+
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.7;
+  --text-body-lg--font-weight: 400;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.7;
+  --text-body--font-weight: 400;
+
+  --text-ui: 0.9375rem; /* 15 — buttons, nav */
+  --text-ui--line-height: 1.5;
+
+  --text-body-sm: 0.875rem; /* 14 */
+  --text-body-sm--line-height: 1.6;
+  --text-body-sm--font-weight: 400;
+
+  --text-nav: 0.84375rem; /* 13.5 — desktop navigation */
+  --text-nav--line-height: 1.4;
+
+  --text-nav-sm: 0.78125rem; /* 12.5 — navigation below 1440px */
+  --text-nav-sm--line-height: 1.4;
+
+  --text-copy: 0.96875rem; /* 15.5 — section body copy */
+  --text-copy--line-height: 1.5;
+
+  --text-quote: 0.84375rem; /* 13.5 — testimonial quotes */
+  --text-quote--line-height: 1.65;
+
+  --text-person: 0.90625rem; /* 14.5 — testimonial names */
+  --text-person--line-height: 1.5;
+
+  --text-small: 0.8125rem; /* 13 */
+  --text-small--line-height: 1.5;
+
+  --text-caption: 0.71875rem; /* 11.5 — hero stat labels */
+  --text-caption--line-height: 1.5;
+
+  --text-micro: 0.6875rem; /* 11 — badges, fine print */
+  --text-micro--line-height: 1.4;
+
+  --text-nano: 0.6rem; /* 9.6 — brand sub-line */
+  --text-nano--line-height: 1.3;
+
+  --tracking-eyebrow: 0.08em; /* section eyebrows */
+  --tracking-eyebrow-wide: 0.1em;
+
+  /* ---- Motion ---- */
+  --animate-fade-in-up: fade-in-up 0.7s var(--ease-soft) both;
+  --animate-fade-in-up-fast: fade-in-up 0.2s var(--ease-soft) both;
+  --animate-reveal-up: reveal-up 0.9s var(--ease-soft) both;
+  --animate-watch-pulse: watch-pulse 1.8s ease-out infinite;
+  --animate-watch-bounce: watch-bounce 1.8s ease-in-out infinite;
+  --animate-watch-shine: watch-shine 2.6s ease-in-out infinite;
+  --animate-spin-slow: spin-slow 24s linear infinite;
+  --animate-rise-in: rise-in 0.8s var(--ease-soft) backwards;
+}
+
+/* Motion timing shared by the entrance stagger and page transitions. */
+:root {
+  --motion-stagger: 90ms;
+  --motion-page-out: 140ms;
+  --motion-page-in: 380ms;
+}
+
+/* ==========================================================================
+   shadcn semantic tokens — pointed at the design palette
+   ========================================================================== */
+:root {
+  --background: var(--white);
+  --foreground: var(--ink);
+  --card: var(--white);
+  --card-foreground: var(--ink);
+  --popover: var(--white);
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-foreground);
+  --secondary: var(--surface);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface);
+  --muted-foreground: var(--ink-soft);
+  --accent: var(--surface);
+  --accent-foreground: var(--ink);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--green);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* The public site has no dark mode toggle; this block only keeps shadcn's
+   `.dark` variant from resolving to undefined values if it is ever enabled. */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    scroll-padding-top: 6rem; /* keep anchor targets clear of the sticky header */
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+  }
+  ::selection {
+    background: var(--gold);
+    color: var(--footer);
+  }
+  :focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+  }
+
+  /* Bengali: the Bengali face leads both stacks, and line-height opens up
+     slightly because Bengali glyphs carry tall matras and descenders. */
+  html[lang="bn"] {
+    --font-sans: var(--font-noto-bengali), var(--font-inter), ui-sans-serif,
+      system-ui, sans-serif;
+    --font-heading: var(--font-noto-bengali), var(--font-poppins), ui-sans-serif,
+      system-ui, sans-serif;
+  }
+  html[lang="bn"] body {
+    line-height: 1.7;
+  }
+  html[lang="bn"] h1,
+  html[lang="bn"] h2,
+  html[lang="bn"] h3,
+  html[lang="bn"] h4 {
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+}
+
+/* ==========================================================================
+   MOTION
+   ========================================================================== */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes watch-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+@keyframes watch-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes watch-shine {
+  0% {
+    left: -60%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* Entrance stagger: `delay-step-2` waits two --motion-stagger steps. */
+@utility delay-step-* {
+  animation-delay: calc(var(--motion-stagger) * --value(integer));
+}
+
+/* Smooth in-page anchor scrolling. The <html data-scroll-behavior="smooth">
+   attribute tells Next.js to switch it off for route changes. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Page transitions (React <ViewTransition> in the root layout). The page
+   content fades out quickly and rises back in; the sticky header is its own
+   snapshot and stays put, so only the content appears to move. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(.page) {
+  animation-duration: 0s;
+}
+::view-transition-old(.page) {
+  animation: fade-out var(--motion-page-out) ease-in both;
+}
+::view-transition-new(.page) {
+  animation: page-in var(--motion-page-in) var(--ease-soft) var(--motion-page-out) both;
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+/* Section reveal. Where scroll-driven animation exists the section fades up
+   as it enters the viewport; elsewhere it plays once on load, like the
+   prototype. Either way the resting state is fully visible. */
+@layer components {
+  .reveal {
+    animation: var(--animate-reveal-up);
+  }
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 30%;
+    }
+
+    /* Card grids inside a revealing section rise in item by item as each
+       one scrolls into view; the 2nd and 3rd in a row trail slightly. Fill is
+       `backwards` so a finished item lets go of `transform` and hover lifts
+       keep working. Browsers without scroll timelines show items as-is. */
+    .reveal :is(.grid, [class*="grid-fit-"]) > * {
+      animation: rise-in linear backwards;
+      animation-timeline: view();
+      animation-range: entry 5% entry 45%;
+    }
+    .reveal :is(.grid, [class*="grid-fit-"]) > :nth-child(3n + 2) {
+      animation-range: entry 12% entry 52%;
+    }
+    .reveal :is(.grid, [class*="grid-fit-"]) > :nth-child(3n + 3) {
+      animation-range: entry 19% entry 59%;
+    }
+  }
+}
+
+/* Card lift on hover: translateY + green-tinted shadow. */
+/* Auto-fitting card grid, as in the artifact: columns are at least N spacing
+   units wide (grid-fit-60 = 240px) and empty tracks collapse. */
+@utility grid-fit-* {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(calc(var(--spacing) * --value(number)), 1fr)
+  );
+}
+
+@utility lift {
+  transition:
+    transform 0.25s var(--ease-soft),
+    box-shadow 0.25s var(--ease-soft),
+    border-color 0.25s var(--ease-soft);
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+@utility lift-sm {
+  transition:
+    transform 0.25s var(--ease-soft),
+    box-shadow 0.25s var(--ease-soft),
+    border-color 0.25s var(--ease-soft);
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lift-sm);
+  }
+}
+
+/* Anything that moves respects the user's OS setting. Colour and opacity
+   transitions are kept (they cause no motion); entrance animations, infinite
+   loops and hover lifts are removed. Components additionally gate transforms
+   behind Tailwind's motion-safe: variant. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+  .lift:hover,
+  .lift-sm:hover {
+    transform: none !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* Bengali: letter-spacing breaks conjunct shaping, so the tracked eyebrow
+   treatments used for Latin text are neutralised. Deliberately unlayered so
+   it outranks Tailwind's utilities. */
+html[lang="bn"] * {
+  letter-spacing: normal;
+}
+
+/* Printed pages and screenshots should never catch a section mid-reveal. */
+@media print {
+  .reveal,
+  .reveal * {
+    animation: none !important;
+  }
+}
+
+/* The artifact scales every h1 down on phones (its own `h1{…!important}`
+   rule at ≤768px): clamp(24px, 7vw, 34px). */
+@media (max-width: 768px) {
+  h1 {
+    font-size: clamp(1.5rem, 7vw, 2.125rem) !important;
+  }
+}

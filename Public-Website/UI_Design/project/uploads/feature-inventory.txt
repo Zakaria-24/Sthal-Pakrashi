@@ -1,0 +1,119 @@
+
+Uddom Public School
+Public Website Feature Inventory
+UI/UX Redesign Reference Document
+Education_Institution / Uddom_Public_School — the public-facing school website
+Prepared July 2026
+
+1. Purpose of This Document
+This is a complete, code-verified inventory of every page and content section on the school&apos;s public website, prepared as a briefing reference for an experienced UI/UX designer leading its redesign.
+The site is the public-facing companion to a separate CMS/Dashboard application documented previously: every piece of content here (notices, events, staff, galleries, settings, and more) is authored there and simply rendered here. That relationship matters for the redesign — this site has no forms, accounts, or admin controls of its own; its entire job is to present CMS content clearly, reliably, and (per the site&apos;s own regulatory content) in compliance with DSHE (Bangladesh&apos;s Directorate of Secondary and Higher Education) public-disclosure requirements.
+2. Tech Stack Snapshot
+Framework: Next.js 16 (App Router) + React 19.2, TypeScript, server components throughout (every page is an async server component that fetches its own data — no client-side data fetching).
+Styling: Tailwind CSS 4, fully token-driven — a custom type scale (H1/H2/H3/Text components wrapping text-h1/text-h2/text-body tokens) and a 4-token brand palette (--brand, --brand-foreground, --brand-hover, --brand-subtle) rather than ad-hoc utility sizes/colors.
+Component primitives: @base-ui/react + shadcn (button, card, badge, separator, skeleton).
+Data source: no direct database access — every page reads through a single lib/api.ts module that calls the Dashboard app&apos;s REST API (/api/banners, /api/notices, etc.) over HTTP.
+No client-side state library — the only client component in the app is the header (for the mobile menu and dropdown open state); everything else renders on the server.
+3. Content &amp; Resilience Architecture
+Two things about how this site gets its content are important context for design decisions:
+3.1 Everything is CMS-driven
+There is no hardcoded copy for anything content-like — school name, notices, staff, galleries, mission/vision, contact details, even the brand accent colour all come from the Dashboard CMS at request time. A redesign should assume every text block, image, and list on every page is variable-length, sometimes-empty content, not fixed copy to design around.
+3.2 The site never shows a broken page
+Every read goes through a wrapper that gives the CMS API 5 seconds to respond; if it&apos;s down, slow, errors, or a content type simply has nothing published yet, the page silently renders bundled placeholder/sample content instead of an empty section or an error. This is deliberate and used everywhere — but the API layer&apos;s own &quot;this is fallback content&quot; flag (isFallback) is never surfaced anywhere in the UI, so today a visitor cannot tell real content from placeholder content. Worth a deliberate design decision either way (Section 8).
+4. Global Layout &amp; Navigation
+4.1 Header
+Sticky, blurred-background header with the school&apos;s logo/initials badge (or uploaded logo), site name, and tagline — all CMS-driven.
+Desktop nav: 7 top-level items. Four are direct links (Home, Notices, Events, Contact); three are hover/click dropdowns grouping related pages — &quot;Institution&quot; (About, Administration, Institution Info), &quot;Academics&quot; (Routine &amp; Syllabus, School Dress), &quot;People&quot; (Teachers &amp; Staff, Alumni), &quot;Media&quot; (Photo Gallery, Video Gallery).
+Dropdowns close on outside click, Escape, or route change; active route/group is highlighted.
+Mobile: hamburger toggle reveals a full-width stacked menu with the same grouping, group labels rendered as section headings rather than dropdowns.
+4.2 Footer
+Four columns: school identity + established year; quick links (6 curated internal pages); CMS-managed &quot;Useful links&quot; (government/board/service links, hidden entirely if none are published); contact block (address, phone, email, office hours) plus social icons (Facebook/YouTube/LinkedIn/Instagram, each hidden individually if not set).
+Copyright line with auto-updating year.
+4.3 Design System Foundations
+Typography goes through shared H1/H2/H3/Text components backed by CSS type-scale tokens — pages never hand-pick font sizes.
+A single brand accent (4 CSS variables: brand, brand-foreground, brand-hover, brand-subtle) drives every accent use — buttons, active nav, link hovers, badges, empty-photo placeholders — and is set live from the Dashboard&apos;s theme picker, so the whole site reskins without a deploy.
+Shared building blocks reused on nearly every page: PageHeader (title + description banner), Section (title/description/action + content wrapper), Photo (image that degrades gracefully to an initials/label placeholder when no image is set — never a broken-image icon), EmptyState (dashed-border &quot;nothing published yet&quot; panel), formatDate (long-form date formatting).
+5. Pages (13 routes)
+Route
+Purpose
+/
+Home — hero banner, at-a-glance stats, latest notices, upcoming events, campus photo strip.
+/about
+School narrative — about text, mission/vision, founder profiles, managing committee.
+/administration
+Leadership — chairman/head-teacher messages, administrative info &amp; office hours, managing committee.
+/institution-info
+DSHE compliance — registration IDs, permission &amp; recognition documents, class/section/enrolment table, committee.
+/academics
+Teaching info + shift/version summary, downloadable routines/syllabus/exam-routines/book lists by category.
+/uniform
+School Dress — uniform items by audience (boys/girls/all/sports/winter).
+/notices, /notices/[id]
+Notice list and detail — category, pinned flag, publish date, optional attachment download.
+/events, /events/[id]
+Event list and detail — category, featured flag, date range, venue, description.
+/teachers
+Teacher profile cards (photo, designation, subject, qualification) + a plain staff directory table.
+/alumni
+Alumni cards — photo, passing year, occupation, testimonial quote.
+/gallery
+Photo grid with category badges — no lightbox or full-size view.
+/videos
+Video card grid with auto-derived YouTube thumbnails and a play-icon overlay; &quot;Watch video&quot; opens the source link in a new tab — no embedded/lightbox player.
+/contact
+Static contact details, DSHE-required Information Centre and Grievance Officer blocks, embedded Google Map (or a placeholder if unset) — no contact form.
+5.1 Home (/)
+Hero: badge (established year or tagline), headline and subtitle from the first banner (falls back to site name/about), two CTAs (banner&apos;s own CTA or &quot;Latest notices&quot;, plus &quot;About the school&quot;), hero photo.
+At-a-glance: 3 stat cards — Founded year, published-notices count, upcoming-events count.
+Latest notices: up to 5, pinned/category badges, links to detail, &quot;View all&quot; link.
+Upcoming events: up to 3 cards with photo, category, title, excerpt, date + venue, &quot;View all&quot; link.
+Campus life: up to 6 square photos from the gallery, &quot;Full gallery&quot; link.
+5.2 About (/about)
+Free-text About paragraph; Mission and Vision as two side-by-side cards (each hidden if empty).
+Founder cards (photo, name, designation + education, italicized message quote) — section hidden entirely if no founders are published.
+Managing Committee cards (photo, name, designation, education) — same conditional hiding.
+5.3 Administration (/administration)
+Leadership messages: chairman/head-teacher/assistant-head-teacher cards with photo, role badge, and a blockquote-style message; explicit empty state if none published.
+Administrative information: free-text block plus office hours, shown only if set.
+Managing Committee grid (same component as About).
+5.4 Institution Info (/institution-info)
+Registration identifiers: EIIN, MPO code, institution code/type, established year — shown as a definition-list grid, only for whichever fields are filled.
+Permission &amp; Recognition: cards per document — category/level badges, issuer, memo number, issue/expiry dates, &quot;View document&quot; link if a scan is attached; explicit empty state.
+Classes, Sections &amp; Students: a full data table (class, shift, version, approved sections, boys, girls, computed row+column totals) — the only real data table on the public site besides Teachers &amp; Staff.
+Managing Committee grid.
+5.5 Academics (/academics)
+Teaching information free-text block, plus a derived summary strip (class range, shift(s), version(s) — computed from the Classes data, not entered separately).
+Routine &amp; Syllabus documents grouped into 5 categories (Class routines, Syllabus, Examination routines, Book lists, Other), each item showing class/year/publish date and either a Download button or an &quot;Available at the school office&quot; badge when no file is attached.
+5.6 School Dress (/uniform)
+Card grid: photo (or audience-labelled placeholder), audience badge, optional class-label badge, title, description.
+5.7 Notices (/notices, /notices/[id])
+List: divided rows, pinned badge, category badge, publish date, title + one-line excerpt, links to detail.
+Detail: back link, pinned/category/date, full title, full description (preserves line breaks), optional &quot;Download attachment&quot; button.
+5.8 Events (/events, /events/[id])
+List: card grid, photo, category badge, featured badge, title, 3-line excerpt, date + venue.
+Detail: back link, large photo, category/featured badges, title, date range, venue, full description.
+5.9 Teachers &amp; Staff (/teachers)
+Teachers: photo cards (square photo, name, designation in brand colour, subject, qualification).
+Staff: a plain 3-column table (name, designation, department) — deliberately simpler than the teacher cards since DSHE requires listing both groups but staff have less to show.
+5.10 Alumni (/alumni)
+Card grid: round photo, name, occupation, &quot;Class of {year}&quot; badge, italicized testimonial quote.
+5.11 Gallery (/gallery)
+Responsive photo grid with a caption bar (title + category badge) under each image. No click-to-enlarge/lightbox interaction today — clicking a photo does nothing.
+5.12 Video Gallery (/videos)
+Card grid: thumbnail (uploaded, or auto-derived from a YouTube URL) with a play-icon overlay, category badge, title, excerpt, publish date, and a &quot;Watch video&quot; button that opens the source URL in a new tab — there is no embedded/in-page video player.
+5.13 Contact (/contact)
+Read-only contact card (address, phone/email as tel:/mailto: links, office hours, EIIN).
+Two DSHE-required blocks: Information Service Centre and Grievance Redress Officer, each shown only if populated.
+Embedded Google Map from a CMS-provided URL, or a &quot;Map not configured&quot; placeholder panel.
+No contact form or any other way for a visitor to message the school directly through the site.
+6. Known Issues &amp; Notes for the Redesign Team
+Findings worth confirming with engineering before final designs are locked in — checked against the repo&apos;s own stated conventions (Education_Institution/CLAUDE.md) and the actual code:
+Every image on the site is a raw &lt;img&gt; tag — next/image is never used anywhere in the codebase. For a photo-heavy school site (banners, gallery, teacher/staff/alumni photos, event photos), that means no automatic responsive sizing, no lazy-loading control, and no blur-up placeholder — a real performance and perceived-polish consideration for the redesign.
+Dark mode CSS variables are fully defined in globals.css (a complete .dark block) but nothing in the app ever applies the .dark class — no theme toggle, no next-themes, no system-preference detection. It&apos;s effectively dead code today; decide whether the redesign activates it or removes it.
+A Skeleton loading component exists in the codebase but is never used on any page. Since every page is a server component awaiting a CMS fetch with a 5-second timeout, a slow API response currently means the browser tab simply sits blank/loading rather than showing any skeleton or progress state.
+There is no custom not-found.tsx or error.tsx anywhere in the app. A bad notice/event ID (which explicitly calls notFound()) or any uncaught rendering error falls through to Next.js&apos;s default, unbranded error pages — breaking visual continuity right at a moment a visitor is already confused.
+The resilience fallback system (Section 3.2) is invisible: the API layer already computes an isFallback flag for every content fetch, but no page reads or displays it. A visitor currently cannot tell whether they&apos;re looking at live school content or bundled sample content — worth a deliberate design treatment (or a conscious decision to keep it invisible).
+No lightbox on the Photo Gallery (photos don&apos;t enlarge on click) and no embedded video player on the Video Gallery (&quot;Watch video&quot; always leaves the site) — both common expectations for a school&apos;s media pages.
+No contact form anywhere on the site — Contact is read-only. If the school wants inbound messages, that&apos;s currently a gap, not a hidden feature.
+CLAUDE.md for this repo mandates &quot;all user-facing text must go through the i18n layer with EN + BN values and a localized fallback.&quot; No i18n layer exists — every string is hardcoded English, with the sole exception of two Bangla labels hardcoded into the Dashboard&apos;s Settings screen (which this site consumes but doesn&apos;t itself localize). This mirrors the same gap found in the Dashboard app and is worth resolving before the redesign assumes bilingual support is already in place.
+The header&apos;s dropdown-heavy IA (3 of 7 top-level items are 2–3-item flyouts, largely organized around DSHE compliance categories — Institution/Academics/People/Media) may not match how a parent or prospective student actually thinks about the site; worth validating the grouping and labels with real users rather than assuming the current compliance-driven structure is the right visitor-facing IA.

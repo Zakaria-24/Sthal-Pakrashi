@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- School mark (BrandMark in brand-lockup.tsx) on the header green;
+       colours are the green and gold design tokens from globals.css. -->
+  <rect width="32" height="32" rx="7" fill="#03594e"/>
+  <g transform="translate(4 4)">
+    <path d="M12 2 22 7v3H2V7Z" fill="#f8cb4e"/>
+    <path d="M4 11h16v9H4Z" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-width="1.8"/>
+    <path d="M9 20v-5h6v5" stroke="#f8cb4e" stroke-width="1.8"/>
+  </g>
+</svg>
