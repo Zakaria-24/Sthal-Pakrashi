@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import { admissionInfoSchema } from "@/lib/admission-schema";
 import { handleError, ok, preflight } from "@/lib/api-response";
+import { refreshPublicSite } from "@/lib/public-site";
 import { pickProvided } from "@/lib/parse";
 import { AdmissionInfo } from "@/models/AdmissionInfo";
 
@@ -45,6 +46,7 @@ export async function PATCH(request: NextRequest) {
       runValidators: true,
       setDefaultsOnInsert: true,
     }).lean();
+    refreshPublicSite();
     return ok(updated, origin);
   } catch (error) {
     return handleError(error, origin);

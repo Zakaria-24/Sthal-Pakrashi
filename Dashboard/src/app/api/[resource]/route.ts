@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/db";
 import { DEFAULT_PUBLIC_FILTER, getResourceConfig } from "@/lib/resource-config";
 import { RESOURCE_MODELS } from "@/lib/resource-models";
 import { fail, handleError, ok, preflight } from "@/lib/api-response";
+import { refreshPublicSite } from "@/lib/public-site";
 import type { ResourceSlug } from "@/lib/resource-config";
 
 /**
@@ -101,6 +102,7 @@ export async function POST(
     await connectDB();
     const created = await model.create(parsed);
 
+    refreshPublicSite();
     return ok(created.toObject(), origin, 201);
   } catch (error) {
     return handleError(error, origin);

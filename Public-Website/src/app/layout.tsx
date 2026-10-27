@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_Bengali, Poppins } from "next/font/google";
-import { ViewTransition } from "react";
+import { Suspense, ViewTransition } from "react";
 import "./globals.css";
 
 import { getSettings } from "@/lib/api";
 import { getPreset, presetToCss } from "@/lib/theme-presets";
-import { getLocale } from "@/lib/i18n/server";
+import type { Locale } from "@/lib/i18n";
+import { getI18n } from "@/lib/i18n/server";
 import { I18nProvider } from "@/lib/i18n/provider";
+import { BrandLoader } from "@/components/ui/brand-loader";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { getSiteText } from "@/lib/site-text";
@@ -57,10 +59,41 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [{ data: settings }, locale] = await Promise.all([
-    getSettings(),
-    getLocale(),
-  ]);
+  const { locale, t } = await getI18n();
+
+  return (
+    <html
+      lang={locale}
+      data-scroll-behavior="smooth"
+      className={`${inter.variable} ${poppins.variable} ${notoSansBengali.variable} h-full antialiased`}
+    >
+      <body className="flex min-h-full flex-col">
+        <I18nProvider locale={locale}>
+          {/*
+            Header and footer need the CMS settings. Behind this boundary the
+            document shell streams at once, so a slow or cold CMS shows the
+            brand loader instead of a blank page.
+          */}
+          <Suspense
+            fallback={<BrandLoader fullscreen label={t("common.loading")} name={t("brand.name")} />}
+          >
+            <SiteChrome locale={locale}>{children}</SiteChrome>
+          </Suspense>
+        </I18nProvider>
+      </body>
+    </html>
+  );
+}
+
+/** Theme override, header, page and footer: everything that reads settings. */
+async function SiteChrome({
+  locale,
+  children,
+}: {
+  locale: Locale;
+  children: React.ReactNode;
+}) {
+  const { data: settings } = await getSettings();
   const site = getSiteText(settings, locale);
 
   /*
@@ -82,42 +115,34 @@ export default async function RootLayout({
       : null;
 
   return (
-    <html
-      lang={locale}
-      data-scroll-behavior="smooth"
-      className={`${inter.variable} ${poppins.variable} ${notoSansBengali.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col">
-        {/*
-          Same id the client-side theme picker in the Dashboard writes to
-          (theme-presets.ts) — kept in sync so any future client-side use on
-          this site updates the same tag rather than creating a duplicate.
-        */}
-        {themeCss && (
-          <style
-            id="theme-preset-override"
-            dangerouslySetInnerHTML={{ __html: themeCss }}
-          />
-        )}
-        <I18nProvider locale={locale}>
-          <SiteHeader
-            chrome={{
-              logoUrl: settings.logoUrl,
-              address: site.address,
-              eiin: site.eiin,
-              year: site.year,
-              admissionOpen: settings.admissionOpen,
-              facebookUrl: settings.socialLinks.facebook,
-              youtubeUrl: settings.socialLinks.youtube,
-            }}
-          />
-          <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-            {/* Route changes fade/rise the page content (see globals.css). */}
-            <ViewTransition default="page">{children}</ViewTransition>
-          </main>
-          <SiteFooter settings={settings} />
-        </I18nProvider>
-      </body>
-    </html>
+    <>
+      {/*
+        Same id the client-side theme picker in the Dashboard writes to
+        (theme-presets.ts) — kept in sync so any future client-side use on
+        this site updates the same tag rather than creating a duplicate.
+      */}
+      {themeCss && (
+        <style
+          id="theme-preset-override"
+          dangerouslySetInnerHTML={{ __html: themeCss }}
+        />
+      )}
+      <SiteHeader
+        chrome={{
+          logoUrl: settings.logoUrl,
+          address: site.address,
+          eiin: site.eiin,
+          year: site.year,
+          admissionOpen: settings.admissionOpen,
+          facebookUrl: settings.socialLinks.facebook,
+          youtubeUrl: settings.socialLinks.youtube,
+        }}
+      />
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+        {/* Route changes fade/rise the page content (see globals.css). */}
+        <ViewTransition default="page">{children}</ViewTransition>
+      </main>
+      <SiteFooter settings={settings} />
+    </>
   );
 }

@@ -140,6 +140,16 @@ export const env = {
       .filter(Boolean);
   },
 
+  // --- Public site cache refresh after content saves (both optional) ---
+  /** Public website origin; defaults to the first allowed CORS origin. */
+  get PUBLIC_SITE_URL() {
+    return (optional("PUBLIC_SITE_URL") || this.ALLOWED_ORIGINS[0] || "").replace(/\/$/, "");
+  },
+  /** Shared with the public site's REVALIDATE_SECRET; unset disables the refresh. */
+  get REVALIDATE_SECRET() {
+    return optional("REVALIDATE_SECRET").trim();
+  },
+
   get isProduction() {
     return process.env.NODE_ENV === "production";
   },

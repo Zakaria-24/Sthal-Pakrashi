@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import { Settings } from "@/models/Settings";
 import { settingsSchema } from "@/lib/resource-config";
 import { handleError, ok, preflight } from "@/lib/api-response";
+import { refreshPublicSite } from "@/lib/public-site";
 import { pickProvided } from "@/lib/parse";
 
 /**
@@ -50,6 +51,7 @@ export async function PATCH(request: NextRequest) {
       setDefaultsOnInsert: true,
     }).lean();
 
+    refreshPublicSite();
     return ok(updated, origin);
   } catch (error) {
     return handleError(error, origin);

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import {
   fallbackAlumni,
   fallbackBanners,
@@ -89,6 +91,16 @@ if (process.env.NODE_ENV === "production" && !API_BASE_URL) {
 /** How long to wait for the CMS before falling back. */
 const TIMEOUT_MS = Number(process.env.API_TIMEOUT_MS ?? 5000);
 
+/**
+ * CMS reads are cached and refreshed in the background (stale-while-revalidate)
+ * at most this often, so visitors never wait on the Dashboard API. Saves in
+ * the Dashboard expire the cache at once through /api/revalidate.
+ */
+const REVALIDATE_SECONDS = Number(process.env.CMS_REVALIDATE_SECONDS ?? 300);
+
+/** Cache tag on every CMS read; /api/revalidate expires it. */
+export const CMS_CACHE_TAG = "cms";
+
 type Envelope<T> =
   | { success: true; data: T }
   | { success: false; message: string };
@@ -109,13 +121,11 @@ type ListPayload<T> = { items: T[]; total: number };
 /** Result metadata lets pages show a subtle "showing sample content" hint. */
 export type Fetched<T> = { data: T; isFallback: boolean };
 
-async function fetchJSON<T>(path: string): Promise<T | null> {
+async function readJSON(path: string): Promise<unknown> {
   if (!API_BASE_URL) return null;
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
-      // Always read through to the CMS so edits appear immediately. For a
-      // high-traffic deployment, swap this for `next: { revalidate: 60 }`.
-      cache: "no-store",
+      next: { revalidate: REVALIDATE_SECONDS, tags: [CMS_CACHE_TAG] },
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: { Accept: "application/json" },
     });
@@ -125,7 +135,7 @@ async function fetchJSON<T>(path: string): Promise<T | null> {
       return null;
     }
 
-    const payload = (await response.json()) as Envelope<T>;
+    const payload = (await response.json()) as Envelope<unknown>;
     if (!payload.success) {
       console.warn(`[api] ${path} failed: ${payload.message}`);
       return null;
@@ -137,6 +147,17 @@ async function fetchJSON<T>(path: string): Promise<T | null> {
     console.warn(`[api] ${path} unreachable (${reason}) — using fallback data`);
     return null;
   }
+}
+
+/**
+ * One read per path per render. The timeout signal opts fetch out of Next's
+ * own memoization, so without this the layout, metadata and page would each
+ * request the settings again.
+ */
+const readJSONOnce = cache(readJSON);
+
+function fetchJSON<T>(path: string): Promise<T | null> {
+  return readJSONOnce(path) as Promise<T | null>;
 }
 
 /**

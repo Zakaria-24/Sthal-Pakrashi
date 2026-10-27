@@ -61,7 +61,7 @@ export function ImageWithFallback({
           queueMicrotask(() => setFailedSrc(src));
         }
       }}
-      src={src}
+      src={optimizeCloudinary(src)}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}
@@ -70,6 +70,18 @@ export function ImageWithFallback({
       className={cn("object-cover", className)}
       {...props}
     />
+  );
+}
+
+/**
+ * CMS uploads are served at their original size and format. For Cloudinary
+ * URLs without a transformation, ask for the best format the browser accepts
+ * (WebP/AVIF) at automatic quality — usually a fraction of the bytes.
+ */
+function optimizeCloudinary(src: string): string {
+  return src.replace(
+    /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(?![a-z]{1,3}_[^/]*\/)/,
+    "$1f_auto,q_auto/",
   );
 }
 

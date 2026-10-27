@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { DEFAULT_PUBLIC_FILTER, getResourceConfig } from "@/lib/resource-config";
 import { RESOURCE_MODELS } from "@/lib/resource-models";
 import { fail, handleError, ok, preflight } from "@/lib/api-response";
+import { refreshPublicSite } from "@/lib/public-site";
 import { pickProvided } from "@/lib/parse";
 import type { ResourceSlug } from "@/lib/resource-config";
 
@@ -95,6 +96,7 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       .lean();
     if (!updated) return fail("Not found", 404, origin);
 
+    refreshPublicSite();
     return ok(updated, origin);
   } catch (error) {
     return handleError(error, origin);
@@ -113,6 +115,7 @@ export async function DELETE(request: NextRequest, ctx: Ctx) {
     const deleted = await resolved.model.findByIdAndDelete(resolved.id).lean();
     if (!deleted) return fail("Not found", 404, origin);
 
+    refreshPublicSite();
     return ok({ deleted: true, id: resolved.id }, origin);
   } catch (error) {
     return handleError(error, origin);
